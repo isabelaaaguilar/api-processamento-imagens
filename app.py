@@ -1,15 +1,22 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, make_response
 from PIL import Image
+from flask_cors import CORS
 import cv2 as cv
 import PIL
+import base64
 import os
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route("/", methods=["POST"])
+@app.route("/upload-image", methods=["POST"])
 def home():
-        imageCompare = request.files["imageCompare"] # Imagem que deseja buscar o corte
-        imageCrop = request.files["imageCrop"] # Corte de uma imagem
+
+        imageCompare = request.files["imageFiles"]        
+         # Imagem que deseja buscar o corte
+       
+        imageCrop = request.files["imageCrop"]
+        # Corte de uma imagem
 
         upload_imageCompare_path = os.path.join(imageCompare.filename)
         imageCompare.save(upload_imageCompare_path)
@@ -22,6 +29,12 @@ def home():
         hsize = int((float(img.size[1])*float(wpercent)))
         img=img.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
         img.save(imageCompare.filename)
+
+        imgCrop = Image.open(upload_imageCrop_path)
+        wpercent = (basewidth/float(imgCrop.size[0]))
+        hsize = int((float(imgCrop.size[1])*float(wpercent)))
+        imgCrop= imgCrop.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
+        imgCrop.save(imageCrop.filename)
 
         imageCompareGray = cv.imread(imageCompare.filename, 0) # Escala de cinza
         imageCompareColorful = cv.imread(imageCompare.filename) # Colorida
@@ -40,7 +53,10 @@ def home():
 
         cv.imshow("Image", imageCompareColorful)
         cv.imwrite("resultado.jpg", imageCompareColorful)
-        
-        return send_file("resultado.jpg", mimetype='image/jpg')
 
+        with open("resultado.jpg", "rb") as f:
+                image_binary = f.read()
+        response = make_response(base64.b64encode(image_binary))
+        return response
+#send_file("resultado.jpg", mimetype='image/jpg')
 app.run(debug=True)

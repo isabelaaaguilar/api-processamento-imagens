@@ -18,57 +18,62 @@ def renomeiaESalva():
             newFileName = "imagem_" + str(count) + "_grau_" + str(x) + ".jpg"
             destination = folder + newFileName
 
-            # renomeia cada imagem
+            # Renomeia e salva cada imagem
             os.rename(source, destination)
 
-            # faz a cópia para a pasta grau artrose
+            # Faz a cópia da imagem original para a pasta grau artrose
             newDestination = newFolder + newFileName
             shutil.copy(destination, newDestination)
 
-            # faz a transposição da imagem
-            transposeImage(destination, folder, newFolder, x, count)
+            # Faz a transposição da imagem original
+            img = Image.open(destination)
+            transposeImage(destination, folder, newFolder, x, count, img, "_transpose")
 
+            # Faz a imagem equalizada, salva na pasta original e faz uma cópia na pasta grau artrose
+            imagemEqualizada = equalizationHistogram(destination, count, x, folder, newFolder)
 
-
-
-            # carrega a imagem em memória principal com a biblioteca openCv
-            imagem = plt.imread(destination)
-            # Converte a imagem para uma matriz de tons de cinza
-            imagem = convert_to_gray(imagem, False)
-            # Inicia o histograma - objeto com 255 valores num dicionário
-            histograma = instantiate_histogram()
-            # Quanta vezes cada valor de intensidade do histograma aparece na imagem
-            histograma = count_intensity_values(histograma, imagem)
-            # 
-            n_pixels = imagem.shape[0] * imagem.shape[1]
-            hist_proba = get_hist_proba(histograma, n_pixels)
-            # Calcula a probabilidade acumulada 
-            accumulated_proba = get_accumulated_proba(hist_proba)
-            # Novo objeto para mapear os valores de cinza
-            new_gray_value = get_new_gray_value(accumulated_proba)
-            # Aplica os novos valores na imagem original
-            imagem = equalize_hist(imagem, new_gray_value)
-
-            # Renomei e salva a imagem equalizada
-            newFileName = "imagem_" + str(count) + "_equalizada_grau_" + str(x) + ".jpg"
-            destination = folder + newFileName
-
-            im = Image.fromarray(imagem).convert('RGB')
-
-            im.save(destination)
-
-
-
-            
+            # Faz a transposição da imagem equalizada
+            transposeImage(destination, folder, newFolder, x, count, imagemEqualizada, "_transpose_equalized")
            
             count += 1
 
-def transposeImage(destination, folder, newFolder, x, count):
-    img = Image.open(destination)
+def equalizationHistogram(destination, count, x, folder, newFolder): 
+    # carrega a imagem em memória principal com a biblioteca openCv
+    imagem = plt.imread(destination)
+    # Converte a imagem para uma matriz de tons de cinza
+    imagem = convert_to_gray(imagem, False)
+    # Inicia o histograma - objeto com 255 valores num dicionário
+    histograma = instantiate_histogram()
+    # Quanta vezes cada valor de intensidade do histograma aparece na imagem
+    histograma = count_intensity_values(histograma, imagem)
+    # Calcula a probabilidade de cada pixel
+    n_pixels = imagem.shape[0] * imagem.shape[1]
+    hist_proba = get_hist_proba(histograma, n_pixels)
+    # Calcula a probabilidade acumulada 
+    accumulated_proba = get_accumulated_proba(hist_proba)
+    # Novo objeto para mapear os valores de cinza
+    new_gray_value = get_new_gray_value(accumulated_proba)
+    # Aplica os novos valores na imagem original
+    imagem = equalize_hist(imagem, new_gray_value)
+    # Renomeia e salva a imagem equalizada
+    newFileName = "imagem_" + str(count) + "_equalizada_grau_" + str(x) + ".jpg"
+    destination = folder + newFileName
+    # Converte a matriz de volta numa imagem
+    im = Image.fromarray(imagem).convert('RGB')
+    # Salva a imagem equalizada
+    im.save(destination)
+    # Faz a cópia da imagem equalizada para a pasta grau artrose
+    newDestination = newFolder + newFileName
+    shutil.copy(destination, newDestination)
+
+    return im
+
+def transposeImage(destination, folder, newFolder, x, count, img, nomeImagem):
+   
     img = img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
 
     # transpoe a imagem e salva
-    transposeFileName = "imagem_" + str(count) + "_transpose_grau_" + str(x) + ".jpg"
+    transposeFileName = "imagem_" + str(count) + str(nomeImagem) + "_grau_" + str(x) + ".jpg"
     destination = folder + transposeFileName
     img.save(destination)
 

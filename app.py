@@ -30,18 +30,18 @@ def home():
         img=img.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
         img.save(imageCompare.filename)
 
-        imgCrop = Image.open(upload_imageCrop_path)
+        """     mgCrop = Image.open(upload_imageCrop_path)
         wpercent = (basewidth/float(imgCrop.size[0]))
         hsize = int((float(imgCrop.size[1])*float(wpercent)))
         imgCrop= imgCrop.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
         imgCrop.save(imageCrop.filename)
-
+ """
         imageCompareGray = cv.imread(imageCompare.filename, 0) # Escala de cinza
         imageCompareColorful = cv.imread(imageCompare.filename) # Colorida
         template = cv.imread(upload_imageCrop_path, 0)
         w, h = template.shape[::-1]
 
-        # faz a correlação cruzada
+        # faz 0 coeficiente de correlação 
         res = cv.matchTemplate(imageCompareGray, template, eval('cv.TM_CCOEFF_NORMED'))
 
         # pega algumas variaveis para montar o retangulo da area de detecção
@@ -57,6 +57,11 @@ def home():
         with open("resultado.jpg", "rb") as f:
                 image_binary = f.read()
         response = make_response(base64.b64encode(image_binary))
+
+        # os.remove("crop.png")
+        # os.remove("resultado.jpg")
+
+
         return response
-#send_file("resultado.jpg", mimetype='image/jpg')
+
 app.run(debug=True)

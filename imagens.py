@@ -72,16 +72,17 @@ def transposeImage(destination, folder, newFolder, x, count, img, nomeImagem):
    
     img = img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
 
-    # transpoe a imagem e salva
+    # Transpõe a imagem e salva
     transposeFileName = "imagem_" + str(count) + str(nomeImagem) + "_grau_" + str(x) + ".jpg"
     destination = folder + transposeFileName
     img.save(destination)
 
-    # faz a cópia para a pasta grau artrose
+    # Faz a cópia para a pasta grau artrose
     newDestination = newFolder + transposeFileName
     shutil.copy(destination, newDestination)
 
 def convert_to_gray(image, luma=False):
+    # Converte a imagem para tons de cinza e equaliza os valores de 0 a 255
     if luma:
         params = [0.299, 0.589, 0.114]
     else:
@@ -94,17 +95,19 @@ def convert_to_gray(image, luma=False):
     return gray_image
 
 def instantiate_histogram():
+    # Cria o histograma da imagem no formato de um array para os pixels de valor de 0 a 255
     hist_array = []
     
     for i in range(0,256):
         hist_array.append(str(i))
         hist_array.append(0)
-    
+    # O índice do vetor indica o valor do pixel (0-255) e o valor naquele índice é a quantidade de vezes em que o pixel aparece na imagem
     hist_dct = {hist_array[i]: hist_array[i + 1] for i in range(0, len(hist_array), 2)} 
     
     return hist_dct
 
 def count_intensity_values(hist, img):
+    # 
     for row in img:
        for column in row:
             hist[str(int(column))] = hist[str(int(column))] + 1
@@ -112,6 +115,7 @@ def count_intensity_values(hist, img):
     return hist
 
 def get_hist_proba(hist, n_pixels):
+    #  Faz o histograma de probabilidade do pixel na imagem em função do histograma da própria imagem
     hist_proba = {}
     for i in range(0, 256):
         hist_proba[str(i)] = hist[str(i)] / n_pixels
@@ -119,6 +123,7 @@ def get_hist_proba(hist, n_pixels):
     return hist_proba
 
 def get_accumulated_proba(hist_proba): 
+    # Faz a propabilidade acumulada em função do histograma de probabilidades
     acc_proba = {}
     sum_proba = 0
     
@@ -132,6 +137,7 @@ def get_accumulated_proba(hist_proba):
     return acc_proba
 
 def get_new_gray_value(acc_proba):
+    # Em função da probabilidade acumulada os valores dos pixels são recalculados, ainda variando de 0 a 255, com objetivo de aumentar o contraste da imagem
     new_gray_value = {}
     
     for i in range(0, 256):

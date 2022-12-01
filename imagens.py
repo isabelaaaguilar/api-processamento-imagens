@@ -1,7 +1,7 @@
 import os
 import shutil
 from PIL import Image
-import cv2
+import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -29,11 +29,22 @@ def renomeiaESalva():
             img = Image.open(destination)
             transposeImage(destination, folder, newFolder, x, count, img, "_transpose")
 
+           
+            imge = cv.imread(destination,0)
+            equ = cv.equalizeHist(imge)
+
+            newFileName = "imagem_" + str(count) + "_equalizada_grau_" + str(x) + ".jpg"
+            newdestination = folder + newFileName
+
+            #equ.save(newdestination)
+            cv.imwrite(newdestination,equ)
+            equ =  Image.open(newdestination)
+
             # Faz a imagem equalizada, salva na pasta original e faz uma cópia na pasta grau artrose
-            imagemEqualizada = equalizationHistogram(destination, count, x, folder, newFolder)
+            #imagemEqualizada = equalizationHistogram(destination, count, x, folder, newFolder)
 
             # Faz a transposição da imagem equalizada
-            transposeImage(destination, folder, newFolder, x, count, imagemEqualizada, "_transpose_equalized")
+            transposeImage(destination, folder, newFolder, x, count, equ, "_transpose_equalized")
            
             count += 1
 

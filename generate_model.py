@@ -7,7 +7,7 @@ from imagens import renomeiaESalva
 if not path.isdir('grau_artrose'):
         makedirs("grau_artrose")
         renomeiaESalva()
-
+        
 all_image_path = [path.join('grau_artrose', p) for p in listdir('grau_artrose') if path.isfile(path.join('grau_artrose', p))]
 
 def load_and_preprocess_image(path):
@@ -22,6 +22,11 @@ def load_and_preprocess_image(path):
 def categorize_images(x):
 
     all_images = [load_and_preprocess_image(path) for path in all_image_path]
+
+
+    sizeOfDemoList = len(all_images)
+
+    print("The length of the list using the len() method is: " + str(sizeOfDemoList))
 
     if x:  
         dict = {'0': 0, '1': 1, '2': 1, '3':1, '4':1} 
@@ -40,8 +45,8 @@ def categorize_images(x):
 def generate_model(x):
     ds, all_image_labels = categorize_images(x)
 
-    mobile_net = tf.keras.applications.ResNet101(input_shape=(224, 224, 3), include_top=False)
-    mobile_net.trainable=False # this told the model not to train the mobile_net.
+    res_net = tf.keras.applications.ResNet50V2(input_shape=(224, 224, 3), include_top=False)
+    res_net.trainable=False # this told the model not to train the res_net.
 
     if x:
         range = 2
@@ -49,7 +54,7 @@ def generate_model(x):
         range = 5
 
     cnn_model = keras.models.Sequential([
-        mobile_net, # mobile_net is low-level layers
+        res_net, # res_net is low-level layers
         keras.layers.GlobalAveragePooling2D(), 
         keras.layers.Flatten(), 
         keras.layers.Dense(64, activation="relu"), # fully-connected hidden layer 
@@ -77,10 +82,6 @@ def generate_model(x):
          cnn_model.save('classify.h5')
 
 def main():
-    #if not path.isdir('grau_artrose'):
-        #makedirs("grau_artrose")
-         
-        #renomeiaESalva()
     generate_model(False)
     generate_model(True)
     

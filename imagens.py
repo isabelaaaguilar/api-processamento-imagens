@@ -29,7 +29,6 @@ def renomeiaESalva():
             img = Image.open(destination)
             transposeImage(destination, folder, newFolder, x, count, img, "_transpose")
 
-           
             imge = cv.imread(destination,0)
             equ = cv.equalizeHist(imge)
 

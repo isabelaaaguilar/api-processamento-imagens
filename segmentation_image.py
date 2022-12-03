@@ -2,7 +2,45 @@
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
-img = cv2.imread("grau_artrose/imagem_1_grau_0.jpg")
+from PIL import Image
+
+img_filename = 'mousecrop.jpg'
+save_filename = 'output_image.jpg'
+
+
+img = Image.open(img_filename)
+
+
+imgray = img.convert(mode='L')
+
+
+img_array = np.asarray(imgray)
+
+
+histogram_array = np.bincount(img_array.flatten(), minlength=256)
+
+num_pixels = np.sum(histogram_array)
+histogram_array = histogram_array/num_pixels
+
+chistogram_array = np.cumsum(histogram_array)
+
+
+transform_map = np.floor(255 * chistogram_array).astype(np.uint8)
+
+
+img_list = list(img_array.flatten())
+
+
+eq_img_list = [transform_map[p] for p in img_list]
+
+
+eq_img_array = np.reshape(np.asarray(eq_img_list), img_array.shape)
+
+
+eq_img = Image.fromarray(eq_img_array, mode='L')
+eq_img.save(save_filename)
+
+img = cv2.imread("output_image.jpg")
 b,g,r = cv2.split(img)
 rgb_img = cv2.merge([r,g,b])
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -28,6 +66,10 @@ markers = markers+1
 markers[unknown==255] = 0
 markers = cv2.watershed(img,markers)
 img[markers == -1] = [255,0,0]
+
+n_white_pix = np.sum(img == 255)
+print('Number of white pixels:', n_white_pix)
+
 plt.subplot(211),plt.imshow(rgb_img)
 plt.title('Input Image'), plt.xticks([]), plt.yticks([])
 plt.subplot(212),plt.imshow(thresh, 'gray')
@@ -35,3 +77,6 @@ plt.imsave(r'thresh.png',thresh)
 plt.title("Otsu's binary threshold"), plt.xticks([]), plt.yticks([])
 plt.tight_layout()
 plt.show()
+
+
+

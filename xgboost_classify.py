@@ -40,10 +40,11 @@ imgDegree = pd.DataFrame(dataDegree, columns=['Image', 'Degree'])
 dataBinary = list(zip(all_images, has_arthrosis))
 imgBinaryArthrosis = pd.DataFrame(dataBinary, columns=['Image', 'WithArthrosis'])
 
+print(imgDegree)
+print(imgBinaryArthrosis)
+""" 
 y = imgBinaryArthrosis["WithArthrosis"]
-print(y)
 X = imgBinaryArthrosis["Image"]
-print(X)
 # dividir entre conjuntos de treino e teste
 train_X, test_X, train_y, test_y = train_test_split(X.values, y.values, test_size=0.2)
 
@@ -54,4 +55,4 @@ model = XGBClassifier()
 model.fit(train_X, train_y, verbose=False)
 # fazer previsões em cima do dataset de teste
 predictions = model.predict(test_X)
-print("Acurácia: {:.2f}".format(accuracy_score(predictions, test_y)))
+print("Acurácia: {:.2f}".format(accuracy_score(predictions, test_y))) """

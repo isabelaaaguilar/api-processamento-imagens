@@ -9,7 +9,7 @@ x_start, y_start, x_end, y_end = 0, 0, 0, 0
 
 basewidth = 500
 # Pass the image name/path
-img = Image.open('joelho2.jpg')
+img = Image.open('grau_artrose/imagem_2_grau_4.jpg')
 wpercent = (basewidth/float(img.size[0]))
 hsize = int((float(img.size[1])*float(wpercent)))
 img=img.resize((basewidth, hsize), PIL.Image.ANTIALIAS)

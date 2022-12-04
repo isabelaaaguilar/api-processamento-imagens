@@ -7,16 +7,50 @@ import matplotlib.pyplot as plt
 
 
 def renomeiaESalva():
-    newFolder = "grau_artrose/"
+    newFolder = "grau_artrose_crop/"
     for x in range(5):
-        folder = "imagens/" + str(x) + "/"
+        folder = "xgboost/" + str(x) + "/"
         count = 1
+        crop = "crop" + str(x) +".png"
 
         for file_name in os.listdir(folder):
             source = folder + file_name
 
             newFileName = "imagem_" + str(count) + "_grau_" + str(x) + ".jpg"
             destination = folder + newFileName
+
+
+            basewidth = 500 # Redimensionando imagm
+            img = Image.open(source)
+            wpercent = (basewidth/float(img.size[0]))
+            hsize = int((float(img.size[1])*float(wpercent)))
+            img=img.resize((basewidth, hsize), Image.ANTIALIAS)
+            img.save(source)
+
+            img = Image.open(crop)
+            wpercent = (basewidth/float(img.size[0]))
+            hsize = int((float(img.size[1])*float(wpercent)))
+            img=img.resize((basewidth, hsize), Image.ANTIALIAS)
+            img.save(crop)
+
+
+            imageCompare =  cv.imread(source, 0)
+            print(crop)
+
+
+            template = cv.imread(crop, 0)
+            w, h = template.shape[::-1]
+
+            # faz a correlação cruzada
+            res = cv.matchTemplate(imageCompare, template, eval('cv.TM_CCOEFF_NORMED'))
+
+            # pega algumas variaveis para montar o retangulo da area de detecção
+            _, _, _, maxLoc = cv.minMaxLoc(res)
+
+            cropimage = imageCompare[maxLoc[1]:maxLoc[1]+h, maxLoc[0]:maxLoc[0]+w]
+            cv.imwrite(source, cropimage)
+
+           
 
             # Renomeia e salva cada imagem
             os.rename(source, destination)

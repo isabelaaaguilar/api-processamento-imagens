@@ -2,10 +2,13 @@ from flask import Flask, request, send_file, jsonify
 from PIL import Image
 import cv2 as cv
 from flask_cors import CORS
+from skimage.io import imread
 import tensorflow as tf
 import os
 import base64
 import time
+import pickle
+from skimage.transform import resize
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -14,8 +17,7 @@ cors = CORS(app)
 IMAGE_SIZE = 224
 
 def correlation(imageCompare_path, imageCompare, imageCrop_path):
-        
-
+    
         basewidth = 500 # Redimensionando imagm
         img = Image.open(imageCompare_path)
         wpercent = (basewidth/float(img.size[0]))
@@ -25,19 +27,21 @@ def correlation(imageCompare_path, imageCompare, imageCrop_path):
 
         imageCompareGray = cv.imread(imageCompare.filename, 0) # Escala de cinza
         imageCompareColorful = cv.imread(imageCompare.filename) # Colorida
-        template = cv.imread(imageCrop_path, 0)
+        template = cv.imread('crop2.png', 0)
         w, h = template.shape[::-1]
 
         # faz a correlação cruzada
         res = cv.matchTemplate(imageCompareGray, template, eval('cv.TM_CCOEFF_NORMED'))
 
         # pega algumas variaveis para montar o retangulo da area de detecção
-        min_val, max_val, min_loc, max_loc = cv.minMaxLoc(res)
-        top_left = max_loc
+        _, _, _, maxLoc = cv.minMaxLoc(res)
+        top_left = maxLoc
         bottom_right = (top_left[0] + w, top_left[1] + h)
         # monta retangulo na iamgem
         cv.rectangle(imageCompareColorful,top_left, bottom_right, (0, 0, 255), 2)
 
+        cropimage = imageCompareColorful[maxLoc[1]:maxLoc[1]+h, maxLoc[0]:maxLoc[0]+w]
+        cv.imwrite("croplegal.jpg", cropimage)
         cv.imshow("Image", imageCompareColorful)
         cv.imwrite("resultado.jpg", imageCompareColorful)
 
@@ -45,7 +49,6 @@ def correlation(imageCompare_path, imageCompare, imageCrop_path):
          encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
 
         return encoded_string
-
 
 
 def preprocess_image(image):
@@ -60,9 +63,6 @@ def preprocess_image(image):
 def load_and_preprocess_image(path):
     image = tf.io.read_file(path)
     return preprocess_image(image)
-
-
-
 
 
 # Predict & classify image
@@ -102,7 +102,7 @@ def classify(model, image_path, type):
     fim = time.time()
     execution_time = round(fim-inicio,2)
 
-    classified_prob  = '{:.3f}'.format(aux_prob)
+    classified_prob  = '{:.2f}'.format(aux_prob*100)
         
     #os.remove(image_path)
     return label, classified_prob, execution_time
@@ -142,6 +142,58 @@ def cnn_classify(image_path):
         return binary, degrees
 
 
+def XGBoostClassify(model_path, Categories, image):
+     model=pickle.load(open(f'{model_path}','rb'))
+     inicio = time.time()
+     probability=model.predict_proba(image.reshape(1,-1))
+    
+     label = ''
+     max_prob = 0
+     for ind,val in enumerate(Categories):
+        prob = probability[0][ind]*100
+        if prob > max_prob:
+            max_prob = prob
+            label = val
+     fim = time.time()
+     execution_time = round(fim-inicio,2)
+     
+     prob = '{:.2f}'.format(max_prob)
+
+     return label, prob, execution_time
+
+
+def XGboost(image_path):
+
+    # url=input('Enter URL of Image')
+    img=imread(image_path)
+
+    img_resize=resize(img,(150,150,3))
+    image=img_resize.flatten()  #img_resize.reshape(1,-1) #[img_resize.flatten()]
+
+    xgboost_list = []
+    random_list = []
+    # caminho do modelo
+    CategoriesG =['grau 0','grau 1','grau 2','grau 3','grau 4']
+    CategoriesB = ['artrose', 'sem artrose']
+
+    #classificação por grau com xgboost 
+    label, max_prob, execution_time = XGBoostClassify('models/xgboost_model_best.p', CategoriesG, image)
+    xgboost_list.append({'type': "degrees", 'label': label, 'prob': max_prob, 'time': execution_time})
+
+    #classificação binária com xgboost
+    label, max_prob, execution_time = XGBoostClassify('models/xgboost_model_best.p', CategoriesB, image)
+    xgboost_list.append({'type': "binary",'label': label, 'prob': max_prob, 'time': execution_time})
+
+    #classificação por grau com randomForest
+    label, max_prob, execution_time = XGBoostClassify('models/randomForest.p', CategoriesG, image)
+    random_list.append({'type': "degrees", 'label': label, 'prob': max_prob, 'time': execution_time})
+
+     #classificação binária com xgboost
+    label, max_prob, execution_time = XGBoostClassify('models/randomForestB.p', CategoriesB, image)
+    random_list.append({'type': "binary",'label': label, 'prob': max_prob, 'time': execution_time})
+
+    return  xgboost_list, random_list
+
 
 @app.route("/", methods=["POST"])
 def home():
@@ -151,11 +203,18 @@ def home():
         # salvar imagens
         imageCompare_path = os.path.join(imageCompare.filename)
         imageCompare.save(imageCompare_path)
+
+        image_equalized_path = 'equalized.png'
+        imge = cv.imread(imageCompare_path,0)
+        equ = cv.equalizeHist(imge)
+        cv.imwrite(image_equalized_path,equ)
+
         imageCrop_path = os.path.join(imageCrop.filename)
         imageCrop.save(imageCrop_path)
 
-        binary, degrees = cnn_classify(imageCompare_path)
-        correlation_image = correlation(imageCompare_path, imageCompare, imageCrop_path)
+        binary, degrees = cnn_classify(image_equalized_path)
+        correlation_image = correlation(image_equalized_path, imageCompare, imageCrop_path)
+        xgboost_list, random_list = XGboost(image_equalized_path)
         response = {
                 'correlation' : correlation_image,
                 'classifications' : {
@@ -163,8 +222,8 @@ def home():
                             'binary': binary,
                             'degrees': degrees
                         },
-                        'random_forest': '',
-                        'XGboost': ''
+                        'randomForest': random_list,
+                        'xgboost': xgboost_list
                 }
         }
 

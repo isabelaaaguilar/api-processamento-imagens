@@ -27,7 +27,7 @@ def correlation(imageCompare_path, imageCompare, imageCrop_path):
 
         imageCompareGray = cv.imread(imageCompare.filename, 0) # Imagem em tons de cinza (cv2.IMREAD_GRAYSCALE)
         imageCompareColorful = cv.imread(imageCompare.filename) # Imagem Colorida
-        template = cv.imread('crop2.png', 0)
+        template = cv.imread(imageCrop_path, 0)
         w, h = template.shape[::-1]
 
         # faz a correlação cruzada
@@ -142,11 +142,13 @@ def XGBoostClassify(model_path, Categories, image):
      model=pickle.load(open(f'{model_path}','rb'))
      inicio = time.time()
      probability=model.predict_proba(image.reshape(1,-1))
+     l=image.flatten()
     
      label = ''
      max_prob = 0
      for ind,val in enumerate(Categories):
         prob = probability[0][ind]*100
+        print(f'{val} = {probability[0][ind]*100}%')
         if prob > max_prob:
             max_prob = prob
             label = val
@@ -154,6 +156,8 @@ def XGBoostClassify(model_path, Categories, image):
      execution_time = round(fim-inicio,2)
      
      prob = '{:.2f}'.format(max_prob)
+
+     print("A imagem pertence a categoria: "+Categories[model.predict(l.reshape(1,-1))[0]])
 
      return label, prob, execution_time
 
@@ -169,22 +173,22 @@ def XGboost(image_path):
     random_list = []
     # caminho do modelo
     CategoriesG =['grau 0','grau 1','grau 2','grau 3','grau 4']
-    CategoriesB = ['artrose', 'sem artrose']
+    CategoriesB = ['sem artrose', 'artrose']
 
     #classificação por grau com xgboost 
     label, max_prob, execution_time = XGBoostClassify('models/xgboost_model_best.p', CategoriesG, image)
     xgboost_list.append({'type': "degrees", 'label': label, 'prob': max_prob, 'time': execution_time})
 
     #classificação binária com xgboost
-    label, max_prob, execution_time = XGBoostClassify('models/xgboost_model_best.p', CategoriesB, image)
+    label, max_prob, execution_time = XGBoostClassify('models/xgboost_model_binary.p', CategoriesB, image)
     xgboost_list.append({'type': "binary",'label': label, 'prob': max_prob, 'time': execution_time})
 
     #classificação por grau com randomForest
     label, max_prob, execution_time = XGBoostClassify('models/randomForest.p', CategoriesG, image)
     random_list.append({'type': "degrees", 'label': label, 'prob': max_prob, 'time': execution_time})
 
-     #classificação binária com xgboost
-    label, max_prob, execution_time = XGBoostClassify('models/randomForestB.p', CategoriesB, image)
+     #classificação binária com randomForest
+    label, max_prob, execution_time = XGBoostClassify('models/random_forest_model_binary.p', CategoriesB, image)
     random_list.append({'type': "binary",'label': label, 'prob': max_prob, 'time': execution_time})
 
     return  xgboost_list, random_list
@@ -199,20 +203,27 @@ def home():
         imageCompare_path = os.path.join(imageCompare.filename)
         imageCompare.save(imageCompare_path)
 
+        imageCrop_path = os.path.join(imageCrop.filename)
+        imageCrop.save(imageCrop_path)
+
+
         # Realiza a equalização da imagem para melhorar a classificação
         image_equalized_path = 'equalized.png'
         imge = cv.imread(imageCompare_path,0)
         equ = cv.equalizeHist(imge)
         cv.imwrite(image_equalized_path,equ)
 
-        imageCrop_path = os.path.join(imageCrop.filename)
-        imageCrop.save(imageCrop_path)
+        crop_equalized_path = 'equalized_crop.png'
+        imge_crop = cv.imread(imageCrop_path,0)
+        equ = cv.equalizeHist(imge_crop)
+        cv.imwrite(crop_equalized_path,equ)
 
+        
         binary, degrees = cnn_classify(image_equalized_path) # Classificação Resnet
         # Aplicação da correlação cruzada e corte de região de interesse para melhor a classificação
         # do XGBooost e do Random Forest
         correlation_image = correlation(image_equalized_path, imageCompare, imageCrop_path)
-        xgboost_list, random_list = XGboost(image_equalized_path) # Classificação XGBoost e Random Forest
+        xgboost_list, random_list = XGboost(crop_equalized_path) # Classificação XGBoost e Random Forest
 
         # Montagem do response contendo todas as classificações que serão retornadas para o front-end
         response = {

@@ -20,7 +20,7 @@ def renomeiaESalva():
             destination = folder + newFileName
 
 
-            basewidth = 500 # Redimensionando imagm
+            basewidth = 500 # Redimensionando imagem
             img = Image.open(source)
             wpercent = (basewidth/float(img.size[0]))
             hsize = int((float(img.size[1])*float(wpercent)))
@@ -33,10 +33,8 @@ def renomeiaESalva():
             img=img.resize((basewidth, hsize), Image.ANTIALIAS)
             img.save(crop)
 
-
             imageCompare =  cv.imread(source, 0)
             print(crop)
-
 
             template = cv.imread(crop, 0)
             w, h = template.shape[::-1]
@@ -44,13 +42,11 @@ def renomeiaESalva():
             # faz a correlação cruzada
             res = cv.matchTemplate(imageCompare, template, eval('cv.TM_CCOEFF_NORMED'))
 
-            # pega algumas variaveis para montar o retangulo da area de detecção
+            # extrai algumas variáveis e coordenadas para montar o retângulo da área de detecção
             _, _, _, maxLoc = cv.minMaxLoc(res)
 
             cropimage = imageCompare[maxLoc[1]:maxLoc[1]+h, maxLoc[0]:maxLoc[0]+w]
             cv.imwrite(source, cropimage)
-
-           
 
             # Renomeia e salva cada imagem
             os.rename(source, destination)

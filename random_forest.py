@@ -33,32 +33,32 @@ def generate_model():
     y=df.iloc[:,-1]
     x_train,x_test,y_train,y_test=train_test_split(x.values,y.values,test_size=0.20,random_state=77,stratify=y)
 
-    # Criação do modelo de classificação baseado no XGBoost
-    from xgboost import XGBClassifier
+    # Criação do modelo de classificação baseado no Random Forest
+    from sklearn.ensemble import RandomForestClassifier
 
-    xgboost = XGBClassifier(max_depth=2, n_estimators=40) # Parâmetros utilizados que nos proporcionaram melhores resultados
-    xgboost.fit(x_train, y_train)
+    randomforest = RandomForestClassifier(n_estimators=40) # Parâmetro utilizado que nos proporcionou melhores resultados
+    randomforest.fit(x_train,y_train)
 
     # Resultados obtidos após o treinamento do modelo 
-    y_pred_xgboost = xgboost.predict(x_test)
-    print("Os dados previstos pelo XGBoost são :")
-    y_pred_xgboost
+    y_pred_randomforest = randomforest.predict(x_test)
+    print("Os dados previstos pelo Random Forest são:")
+    y_pred_randomforest
 
     np.array(y_test)
 
-    print(classification_report(y_pred_xgboost, y_test))
-    print(f"O modelo possui {accuracy_score(y_pred_xgboost, y_test)*100}% de acurácia")
-    confusion_matrix(y_pred_xgboost, y_test)
+    print(classification_report(y_pred_randomforest, y_test))
+    print(f"O modelo possui {accuracy_score(y_pred_randomforest, y_test)*100}% de acurácia")
+    confusion_matrix(y_pred_randomforest, y_test)
 
     # Salvando o modelo treinado
-    model_name = 'xgboost_model'
-    pickle.dump(xgboost, open(f'{model_name}.p','wb'))
+    model_name = 'random_forest_model'
+    pickle.dump(randomforest, open(f'{model_name}.p','wb'))
 
 generate_model()
 
 # Teste unitário de classificação no modelo gerado anteriormente
 
-model_name = 'xgboost_model'
+model_name = 'random_forest_model'
 model=pickle.load(open(f'{model_name}.p','rb'))
 
 categories=['0','1','2','3','4']
@@ -68,7 +68,7 @@ categories=['0','1','2','3','4']
 img=imread('download.png')
 img_resize=resize(img,(150, 150, 3))
 l=img_resize.flatten()
-probability=model.predict_proba(l.reshape(1,-1))
+probability=model.predict_proba(l.reshape(1, -1))
 
 # Resultados obtidos após o teste de classificação
 for ind,val in enumerate(categories):

@@ -8,11 +8,11 @@ import pickle
 import os
 
 def generate_model():
-    categories=['0','1','2','3','4']
+    categories=['0','1']
     # categories=['0','1'] # Categorias para gerar o modelo de classificação binária
     data_arr=[]
     target_arr=[]
-    datadir='artrose_crop/'
+    datadir='binary/'
 
     # Carregamento de todas as imagens presentes no diretório especificado
     for i in categories:
@@ -61,11 +61,11 @@ generate_model()
 model_name = 'random_forest_model'
 model=pickle.load(open(f'{model_name}.p','rb'))
 
-categories=['0','1','2','3','4']
+categories=['0','1']
 # categories=['0','1'] # Categorias para realizar a classificação binária
 
 # Tratamento da imagem que será testada 
-img=imread('download.png')
+img=imread('crop.png')
 img_resize=resize(img,(150, 150, 3))
 l=img_resize.flatten()
 probability=model.predict_proba(l.reshape(1, -1))

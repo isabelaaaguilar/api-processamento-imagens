@@ -173,14 +173,13 @@ def XGboost(image_path):
     random_list = []
     # caminho do modelo
     CategoriesG =['grau 0','grau 1','grau 2','grau 3','grau 4']
-    CategoriesB = ['sem artrose', 'artrose']
 
     #classificação por grau com xgboost 
     label, max_prob, execution_time = XGBoostClassify('models/xgboost_model_best.p', CategoriesG, image)
     xgboost_list.append({'type': "degrees", 'label': label, 'prob': max_prob, 'time': execution_time})
 
     #classificação binária com xgboost
-    label, max_prob, execution_time = XGBoostClassify('models/xgboost_model_binary.p', CategoriesB, image)
+    label, max_prob, execution_time = XGBoostClassify('models/xgboost_model_binary.p', ['artrose', 'sem artrose'], image)
     xgboost_list.append({'type': "binary",'label': label, 'prob': max_prob, 'time': execution_time})
 
     #classificação por grau com randomForest
@@ -188,7 +187,7 @@ def XGboost(image_path):
     random_list.append({'type': "degrees", 'label': label, 'prob': max_prob, 'time': execution_time})
 
      #classificação binária com randomForest
-    label, max_prob, execution_time = XGBoostClassify('models/random_forest_model_binary.p', CategoriesB, image)
+    label, max_prob, execution_time = XGBoostClassify('models/random_forest_modelb.p', ['sem artrose', 'artrose'], image)
     random_list.append({'type': "binary",'label': label, 'prob': max_prob, 'time': execution_time})
 
     return  xgboost_list, random_list

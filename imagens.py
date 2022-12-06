@@ -1,3 +1,16 @@
+
+"""
+Ciência da Computação - Unidade Praça da Liberdade
+
+Integrantes:
+
+Isabela Regina Aguilar 706002
+Lucas Milard de Souza Freitas 704593
+Rossana de Oliveira Souza  705085
+
+"""
+
+
 import os
 import shutil
 from PIL import Image

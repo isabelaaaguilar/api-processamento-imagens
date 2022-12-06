@@ -1,3 +1,14 @@
+"""
+Ciência da Computação - Unidade Praça da Liberdade
+
+Integrantes:
+
+Isabela Regina Aguilar 706002
+Lucas Milard de Souza Freitas 704593
+Rossana de Oliveira Souza  705085
+
+"""
+
 from os import path, listdir, makedirs
 from imagens import renomeiaESalva
 import tensorflow as tf

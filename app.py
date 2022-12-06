@@ -1,3 +1,13 @@
+"""
+Ciência da Computação - Unidade Praça da Liberdade
+
+Integrantes:
+
+Isabela Regina Aguilar 706002
+Lucas Milard de Souza Freitas 704593
+Rossana de Oliveira Souza  705085
+
+"""
 from flask import Flask, request, jsonify
 from PIL import Image
 import cv2 as cv
